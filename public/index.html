@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Anti-vol</title>
+	<style type="text/css">
+		* {
+			margin: 0;
+			padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+		}
+
+		main {
+			width: 25vw;
+			background-color: #333;
+			color: white;
+			border-radius: 1em;
+			padding: 1em;
+			margin: 1em;
+			margin-left:  auto;
+			margin-right:  auto;
+			box-shadow: 0em 0em 5em grey;
+			position: relative;
+		}
+
+		header {
+			background-color: lightgrey;
+			color: black;
+			border-radius: 1em 1em 0 0;
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			margin: auto;
+		}
+		header h1 {
+			width: 50%;
+            text-align: left;
+		}
+		header button {
+			border: none;
+			color: white;
+			padding: 15px 32px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 16px;
+			position: absolute;
+			right: 0;
+			top: 0;
+			height: 100%;
+			border-radius: 0 1em 0 0;
+		}
+		header button:hover {
+			opacity: 0.8;
+			cursor: pointer;
+		}
+		.active {
+			background-color: #4CAF50;
+		}
+		.active td:nth-child(2):before {
+			content: 'Activation';
+		}
+		.inactive {
+			background-color: #f44336;
+		}
+		.inactive td:nth-child(2):before {
+			content: 'Désactivation';
+		}
+		.alert {
+			background-color: darkorange;
+			animation: blinkalert 2s infinite;
+		}
+		@keyframes blinkalert { 
+			0% { }
+			50% { background-color: #FEB201; } 
+		}
+		.alert td:nth-child(2):before {
+			content: 'Détection de mouvement';
+		}
+
+		section {
+			margin: auto;
+			margin-top: 5em;
+		}	
+		h1 {
+			padding: 1em;
+			width: 100%;
+			font-size: 21pt;
+			text-align: center;
+		}
+
+		table {
+			font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+			border-collapse: collapse;
+			width: 100%;
+		}
+		table td, table th {
+			border: 1px solid #ddd;
+			padding: 8px;
+		}
+		th:nth-child(1) {
+			width: 30%;
+		}
+		table th {
+			padding-top: 12px;
+			padding-bottom: 12px;
+			text-align: left;
+			background-color: lightgrey;
+			color: black;
+		}
+		table tbody tr {
+			background-color: lightgrey;
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<header>
+			<h1>Anti-vol</h1>
+
+			<button class="active">Activer</button>
+		</header>
+
+		<script>
+			var headers = new Headers();
+
+			var init = { 
+				method: 'GET',
+				headers: headers,
+				mode: 'cors'
+			};
+
+			var req = new Request('http://172.28.55.85:3000/isActivated', init);
+
+			fetch(req)
+			.then(function(res) {
+				return res.json();
+			})
+			.then(function(json) {
+				let button = document.querySelector('header button');
+                let antivol = document.querySelector('header h1');
+				if(json) {
+					button.classList.remove('active');
+					button.classList.add('inactive');
+                    button.innerHTML = 'Désactiver';
+                    antivol.textContent = 'Antivol activé';
+				} else {
+					button.classList.remove('inactive');
+					button.classList.add('active');
+                    button.innerHTML = 'Activer';
+                    antivol.textContent = 'Antivol désactivé';
+				}
+			});
+
+			document.querySelector('header button').addEventListener('click', function (event) {
+				if(event.target.classList.contains('active')) {
+					event.target.classList.remove('active');
+					event.target.classList.add('inactive');
+					event.target.innerHTML = 'Désactiver';
+				} else {
+					event.target.classList.remove('inactive');
+					event.target.classList.add('active');
+					event.target.innerHTML = 'Activer';
+				}
+			});
+		</script>
+
+		<section>
+			<h1>Alertes :</h1>
+
+			<table>
+				<thead>
+					<tr>
+						<th>Date</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					<!-- <tr class="inactive">
+						<td>00/00/0000 - 00h00</td>
+						<td></td>
+					</tr>
+					<tr class="alert">
+						<td>00/00/0000 - 00h00</td>
+						<td></td>
+					</tr>
+					<tr class="active">
+						<td>00/00/0000 - 00h00</td>
+						<td></td>
+					</tr> -->
+				</tbody>
+			</table>
+		</section>
+
+		<script type="text/javascript" src="Moment.js"></script>
+
+		<script>
+			moment.locale('fr');
+			var headers = new Headers();
+
+			var init = { 
+				method: 'GET',
+				headers: headers,
+				mode: 'cors'
+			};
+
+			var req = new Request('http://172.28.55.85:3000/moving/10', init);
+
+			fetch(req)
+			.then(function(res) {
+				return res.json();
+			})
+			.then(function(json) {
+				let table = document.querySelector('table');
+
+				for(let i in json) {
+					let tr = document.createElement('tr');
+
+					tr.classList.add('alert');
+
+					let tdTime = document.createElement('td');
+
+					tdTime.appendChild(document.createTextNode(moment(json[i].timestamp).format('HH:MM:SS')));
+
+					tr.appendChild(tdTime);
+
+					let tdAction = document.createElement('td');
+
+					tr.appendChild(tdAction);
+
+					table.appendChild(tr);
+				}
+			});
+		</script>
+
+		<footer>
+			
+		</footer>
+	</main>
+
+	<canvas id="graph" height="30vh" width="100%"></canvas>
+
+	<script type="text/javascript" src="Chart.min.js"></script>
+
+	<script>
+		var init = { 
+			method: 'GET',
+			headers: headers,
+			mode: 'cors'
+		};
+
+		var req = new Request('http://172.28.55.85:3000/acceleration/100', init);
+
+		let accX = [];
+		let accY = [];
+		let timestamp = [];
+
+		fetch(req)
+		.then(function(res) {
+			return res.json();
+		})
+		.then(function(json) {
+			for(let i in json) {
+				accX.push(json[i].data.pitch);
+				accY.push(json[i].data.roll);
+				timestamp.push(moment(json[i].timestamp).format('HH:MM:SS'));
+			}
+
+			let datas = {
+				labels: timestamp,	// Heures
+				datasets: [{
+					"label": "Pitch",
+					"data": accX,
+					"fill": false,
+					"borderColor": "rgb(75, 192, 192)",
+					"lineTension": 0.1
+				}, {
+					"label": "Roll",
+					"data": accY,
+					"fill": false,
+					"borderColor": "rgb(75, 0, 192)",
+					"lineTension": 0.1
+				}]
+			};
+
+			let options = {
+				animation: {
+					duration: 0, // general animation time
+				},
+				hover: {
+					animationDuration: 0, // duration of animations when hovering an item
+				},
+				responsiveAnimationDuration: 0
+			}
+
+			let ctx = document.getElementById('graph').getContext('2d');
+
+			let myLineChart = new Chart(ctx, {
+				type: 'line',
+				data: datas,
+				options: options
+			});
+		});
+
+		setTimeout(function () {
+			window.location = ''
+		}, 5000);
+	</script>
+</body>
+</html>
